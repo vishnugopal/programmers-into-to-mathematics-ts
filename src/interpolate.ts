@@ -7,6 +7,12 @@ import {
 import type { Point } from "./lib/point";
 import { BigRational } from "big-rational-ts";
 
+/**
+ * Interpolate a polynomial that passes through the given points.
+ *
+ * @param points The points to interpolate.
+ * @returns The polynomial that passes through the given points.
+ */
 export function interpolate(points: Point[]): Polynomial {
   const n = points.length;
 
