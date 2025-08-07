@@ -14,6 +14,16 @@ describe("interpolate", () => {
     expect(print(result)).toEqual("2x + 1");
   });
 
+  test(" higher order", () => {
+    const points = [
+      { x: toRational(1), y: toRational(3) },
+      { x: toRational(4), y: toRational(9) },
+      { x: toRational(7), y: toRational(27) },
+    ];
+    const result = interpolate(points);
+    expect(print(result)).toEqual("2/3x^2 - 4/3x + 11/3");
+  });
+
   test("fractions", () => {
     const points = [
       { x: toRational(2), y: toRational(3) },

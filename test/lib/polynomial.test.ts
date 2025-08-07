@@ -6,9 +6,10 @@ import {
   multiply,
   add,
   newPolynomialFromPairs,
+  evaluate,
 } from "../../src/lib/polynomial";
 import { BigRational } from "big-rational-ts";
-import { toRational } from "../../src/lib/rational";
+import { toRational, toSimpleString } from "../../src/lib/rational";
 
 describe("polynomial", () => {
   test("print: simple", () => {
@@ -99,5 +100,16 @@ describe("polynomial", () => {
     ]);
     const result = add(polynomial1, polynomial2);
     expect(print(result)).toEqual("3x^2 + 7x + 5");
+  });
+
+  test("evaluate", () => {
+    const polynomial = newPolynomialFromPairs([
+      [1, 0],
+      [2, 1],
+      [3, 2],
+    ]);
+    expect(print(polynomial)).toEqual("3x^2 + 2x + 1");
+    const result = evaluate(polynomial, new BigRational(2n, 1n));
+    expect(toSimpleString(result)).toEqual("17");
   });
 });

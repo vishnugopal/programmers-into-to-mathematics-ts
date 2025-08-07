@@ -38,3 +38,17 @@ export function toRational(number: number | bigint | BigRational): BigRational {
 
   return new BigRational(BigInt(number), 1n);
 }
+
+/**
+ * Raise a rational to an exponent.
+ *
+ * @param rational - The rational to raise.
+ * @param exponent - The exponent to raise the rational to.
+ * @returns The rational raised to the exponent.
+ */
+export function pow(rational: BigRational, exponent: bigint): BigRational {
+  return new BigRational(
+    rational.getNumerator() ** exponent,
+    rational.getDenominator() ** exponent
+  );
+}

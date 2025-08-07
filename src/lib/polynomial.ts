@@ -1,5 +1,5 @@
 import { BigRational } from "big-rational-ts";
-import { toRational, toSimpleString } from "./rational";
+import { pow, toRational, toSimpleString } from "./rational";
 
 type Coefficient = BigRational;
 type Position = number;
@@ -170,4 +170,16 @@ export function add(
         position,
       })),
   };
+}
+
+/**
+ * Evaluate a polynomial at a given x.
+ *
+ * @param polynomial - The polynomial to evaluate.
+ * @param x - The x value to evaluate the polynomial at.
+ */
+export function evaluate(polynomial: Polynomial, x: BigRational): BigRational {
+  return polynomial.coefficients.reduce((acc, { coefficient, position }) => {
+    return acc.add(coefficient.mul(pow(x, BigInt(position))));
+  }, toRational(0));
 }
