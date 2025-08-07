@@ -31,6 +31,10 @@ export function toSimpleString(rational: BigRational): string {
  * @param number - The number to convert.
  * @returns The BigRational representation of the number.
  */
-export function toRational(number: number): BigRational {
+export function toRational(number: number | bigint | BigRational): BigRational {
+  if (number instanceof BigRational) {
+    return number;
+  }
+
   return new BigRational(BigInt(number), 1n);
 }

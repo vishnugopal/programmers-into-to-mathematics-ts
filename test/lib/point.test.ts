@@ -1,6 +1,5 @@
 import { expect, test, describe } from "bun:test";
 import { print } from "../../src/lib/point";
-import { BigRational } from "big-rational-ts";
 import { toRational } from "../../src/lib/rational";
 
 describe("point", () => {

@@ -2,10 +2,33 @@ import { BigRational } from "big-rational-ts";
 import { toRational, toSimpleString } from "./rational";
 
 type Coefficient = BigRational;
+type Position = number;
+
+type CoefficientPositionPair = {
+  coefficient: Coefficient;
+  position: Position;
+};
 
 export type Polynomial = {
-  coefficients: Coefficient[];
+  coefficients: CoefficientPositionPair[];
 };
+
+/**
+ * Create a polynomial from a list of pairs of coefficients and positions.
+ *
+ * @param pairs - The pairs of coefficients and positions.
+ * @returns The polynomial.
+ */
+export function newPolynomialFromPairs(
+  pairs: [number | bigint | BigRational, number][]
+): Polynomial {
+  return {
+    coefficients: pairs.map(([coefficient, position]) => ({
+      coefficient: toRational(coefficient),
+      position,
+    })),
+  };
+}
 
 /**
  * Describe a polynomial in a human-readable format.
@@ -13,24 +36,16 @@ export type Polynomial = {
  * @param polynomial - The polynomial to describe.
  *
  * @example
- * print({ coefficients: [1, 2, 3] }) // "3x^2 + 2x + 1"
- * print({ coefficients: [0, 2, 3] }) // "3x^2 + 2x"
- * print({ coefficients: [0] }) // "0"
+ * print({ coefficients: [[1, 0], [2, 1], [3, 2]] }) // "3x^2 + 2x + 1"
+ * print({ coefficients: [[0, 0], [2, 1], [3, 2]] }) // "3x^2 + 2x"
+ * print({ coefficients: [[0, 0]] }) // "0"
  */
 export function print(polynomial: Polynomial): string {
-  const degree = polynomial.coefficients.length - 1;
-
-  if (degree === 0) {
-    return toSimpleString(polynomial.coefficients[0]);
-  }
-
   return (
     polynomial.coefficients
-      .reverse()
-      .map((coefficient, index) => {
-        return coefficient.eq(toRational(0))
-          ? ""
-          : `${toSimpleString(coefficient)}x^${degree - index}`;
+      .sort((a, b) => b.position - a.position)
+      .map(({ coefficient, position }) => {
+        return `${toSimpleString(coefficient)}x^${position}`;
       })
       .join(" + ")
       // formatting tweaks
@@ -41,6 +56,7 @@ export function print(polynomial: Polynomial): string {
       .replace(/\+\s*?\+/, "+")
       .replace(/ \/\s*?1x/g, "x")
       .replace(/\/ 1\s*?/, "")
+      .replace(/\+ 0$/, "")
       .trim()
   );
 }
@@ -56,9 +72,10 @@ export function multiplyWithRealNumber(
   number: BigRational
 ): Polynomial {
   return {
-    coefficients: polynomial.coefficients.map((coefficient) =>
-      coefficient.mul(number).reduce()
-    ),
+    coefficients: polynomial.coefficients.map(({ coefficient, position }) => ({
+      coefficient: coefficient.mul(number).reduce(),
+      position,
+    })),
   };
 }
 
@@ -73,9 +90,10 @@ export function divideByRealNumber(
   number: BigRational
 ): Polynomial {
   return {
-    coefficients: polynomial.coefficients.map((coefficient) =>
-      coefficient.div(number).reduce()
-    ),
+    coefficients: polynomial.coefficients.map(({ coefficient, position }) => ({
+      coefficient: coefficient.div(number).reduce(),
+      position,
+    })),
   };
 }
 
@@ -93,17 +111,29 @@ export function multiply(
   const degree2 = polynomial2.coefficients.length - 1;
   const degree = degree1 + degree2;
 
-  const coefficients = new Array(degree + 1).fill(toRational(0));
-
-  for (let i = 0; i <= degree1; i++) {
-    for (let j = 0; j <= degree2; j++) {
-      coefficients[i + j] = coefficients[i + j]
-        .add(polynomial1.coefficients[i].mul(polynomial2.coefficients[j]))
-        .reduce();
+  const coefficientsArray: BigRational[] = new Array(degree + 1).fill(
+    toRational(0)
+  );
+  for (let i = 0; i <= degree; i++) {
+    for (let j = 0; j <= degree; j++) {
+      coefficientsArray[i + j] = (
+        coefficientsArray[i + j] ?? toRational(0)
+      ).add(
+        (polynomial1.coefficients[i]?.coefficient ?? toRational(0)).mul(
+          polynomial2.coefficients[j]?.coefficient ?? toRational(0)
+        )
+      );
     }
   }
 
-  return { coefficients };
+  return {
+    coefficients: coefficientsArray
+      .filter((coefficient) => !coefficient.eq(toRational(0)))
+      .map((coefficient, position) => ({
+        coefficient,
+        position,
+      })),
+  };
 }
 
 /**
@@ -120,13 +150,24 @@ export function add(
   const degree2 = polynomial2.coefficients.length - 1;
   const degree = Math.max(degree1, degree2);
 
-  const coefficients = new Array(degree + 1).fill(toRational(0));
+  const coefficientsArray: BigRational[] = new Array(degree + 1).fill(
+    toRational(0)
+  );
 
   for (let i = 0; i <= degree; i++) {
-    coefficients[i] = (polynomial1.coefficients[i] ?? toRational(0))
-      .add(polynomial2.coefficients[i] ?? toRational(0))
+    coefficientsArray[i] = (
+      polynomial1.coefficients[i]?.coefficient ?? toRational(0)
+    )
+      .add(polynomial2.coefficients[i]?.coefficient ?? toRational(0))
       .reduce();
   }
 
-  return { coefficients };
+  return {
+    coefficients: coefficientsArray
+      .filter((coefficient) => !coefficient.eq(toRational(0)))
+      .map((coefficient, position) => ({
+        coefficient,
+        position,
+      })),
+  };
 }

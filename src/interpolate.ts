@@ -2,6 +2,7 @@ import {
   add,
   multiply,
   multiplyWithRealNumber,
+  newPolynomialFromPairs,
   type Polynomial,
 } from "./lib/polynomial";
 import type { Point } from "./lib/point";
@@ -30,12 +31,12 @@ export function interpolate(points: Point[]): Polynomial {
       const xj = points[j].x;
       const denominator = new BigRational(1n, 1n).div(xi.subtract(xj));
 
-      multipliers.push({
-        coefficients: [
-          new BigRational(-1n, 1n).mul(xj).mul(denominator),
-          denominator,
-        ],
-      });
+      multipliers.push(
+        newPolynomialFromPairs([
+          [new BigRational(-1n, 1n).mul(xj).mul(denominator), 0],
+          [denominator, 1],
+        ])
+      );
     }
 
     const polynomial = multipliers.reduce((acc, multiplier) => {
