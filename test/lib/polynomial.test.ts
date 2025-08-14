@@ -7,6 +7,7 @@ import {
   add,
   newPolynomialFromPairs,
   evaluate,
+  evaluateHorner,
 } from "../../src/lib/polynomial";
 import { BigRational } from "big-rational-ts";
 import { toRational, toSimpleString } from "../../src/lib/rational";
@@ -44,7 +45,7 @@ describe("polynomial", () => {
       [2, 1],
       [3, 2],
     ]);
-    const result = multiplyWithRealNumber(polynomial, new BigRational(2n, 1n));
+    const result = multiplyWithRealNumber(polynomial, toRational(2));
     expect(print(result)).toEqual("6x^2 + 4x + 2");
   });
 
@@ -54,7 +55,7 @@ describe("polynomial", () => {
       [4, 1],
       [6, 2],
     ]);
-    const result = divideByRealNumber(polynomial, new BigRational(2n, 1n));
+    const result = divideByRealNumber(polynomial, toRational(2));
     expect(print(result)).toEqual("3x^2 + 2x + 1");
   });
 
@@ -109,7 +110,30 @@ describe("polynomial", () => {
       [3, 2],
     ]);
     expect(print(polynomial)).toEqual("3x^2 + 2x + 1");
-    const result = evaluate(polynomial, new BigRational(2n, 1n));
+    const result = evaluate(polynomial, toRational(2));
     expect(toSimpleString(result)).toEqual("17");
+  });
+
+  test("evaluateWithHorner", () => {
+    const polynomial = newPolynomialFromPairs([
+      [1, 0],
+      [2, 1],
+      [3, 2],
+    ]);
+    expect(print(polynomial)).toEqual("3x^2 + 2x + 1");
+    const result = evaluateHorner(polynomial, toRational(2));
+    expect(toSimpleString(result)).toEqual("17");
+  });
+
+  test("evaluateWithHorner: larger degree", () => {
+    const polynomial = newPolynomialFromPairs([
+      [1, 0],
+      [2, 1],
+      [3, 2],
+      [4, 5],
+    ]);
+    expect(print(polynomial)).toEqual("4x^5 + 3x^2 + 2x + 1");
+    const result = evaluateHorner(polynomial, toRational(2));
+    expect(toSimpleString(result)).toEqual("145");
   });
 });

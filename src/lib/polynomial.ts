@@ -20,7 +20,7 @@ export type Polynomial = {
  * @returns The polynomial.
  */
 export function newPolynomialFromPairs(
-  pairs: [number | bigint | BigRational, number][]
+  pairs: [number | bigint | BigRational, number][],
 ): Polynomial {
   return {
     coefficients: pairs.map(([coefficient, position]) => ({
@@ -62,6 +62,31 @@ export function print(polynomial: Polynomial): string {
 }
 
 /**
+ * Find a degree for the polynomial.
+ *
+ * @param polynomial - The polynomial to find the degree of.
+ */
+export function findDegree(polynomial: Polynomial): number {
+  return Math.max(
+    ...polynomial.coefficients.map((coefficient) => coefficient.position),
+  );
+}
+
+/**
+ * Find the coefficient at nth position for a polynomial
+ */
+export function findCoefficient(
+  polynomial: Polynomial,
+  position: number,
+): Coefficient {
+  return (
+    polynomial.coefficients.find(
+      (coefficient) => coefficient.position === position,
+    )?.coefficient || toRational(0)
+  );
+}
+
+/**
  * Multiply a polynomial by a real number.
  *
  * @param polynomial - The polynomial to multiply.
@@ -69,7 +94,7 @@ export function print(polynomial: Polynomial): string {
  */
 export function multiplyWithRealNumber(
   polynomial: Polynomial,
-  number: BigRational
+  number: BigRational,
 ): Polynomial {
   return {
     coefficients: polynomial.coefficients.map(({ coefficient, position }) => ({
@@ -87,7 +112,7 @@ export function multiplyWithRealNumber(
  */
 export function divideByRealNumber(
   polynomial: Polynomial,
-  number: BigRational
+  number: BigRational,
 ): Polynomial {
   return {
     coefficients: polynomial.coefficients.map(({ coefficient, position }) => ({
@@ -105,14 +130,14 @@ export function divideByRealNumber(
  */
 export function multiply(
   polynomial1: Polynomial,
-  polynomial2: Polynomial
+  polynomial2: Polynomial,
 ): Polynomial {
-  const degree1 = polynomial1.coefficients.length - 1;
-  const degree2 = polynomial2.coefficients.length - 1;
+  const degree1 = findDegree(polynomial1);
+  const degree2 = findDegree(polynomial2);
   const degree = degree1 + degree2;
 
   const coefficientsArray: BigRational[] = new Array(degree + 1).fill(
-    toRational(0)
+    toRational(0),
   );
   for (let i = 0; i <= degree; i++) {
     for (let j = 0; j <= degree; j++) {
@@ -120,8 +145,8 @@ export function multiply(
         coefficientsArray[i + j] ?? toRational(0)
       ).add(
         (polynomial1.coefficients[i]?.coefficient ?? toRational(0)).mul(
-          polynomial2.coefficients[j]?.coefficient ?? toRational(0)
-        )
+          polynomial2.coefficients[j]?.coefficient ?? toRational(0),
+        ),
       );
     }
   }
@@ -144,14 +169,14 @@ export function multiply(
  */
 export function add(
   polynomial1: Polynomial,
-  polynomial2: Polynomial
+  polynomial2: Polynomial,
 ): Polynomial {
-  const degree1 = polynomial1.coefficients.length - 1;
-  const degree2 = polynomial2.coefficients.length - 1;
+  const degree1 = findDegree(polynomial1);
+  const degree2 = findDegree(polynomial2);
   const degree = Math.max(degree1, degree2);
 
   const coefficientsArray: BigRational[] = new Array(degree + 1).fill(
-    toRational(0)
+    toRational(0),
   );
 
   for (let i = 0; i <= degree; i++) {
@@ -182,4 +207,43 @@ export function evaluate(polynomial: Polynomial, x: BigRational): BigRational {
   return polynomial.coefficients.reduce((acc, { coefficient, position }) => {
     return acc.add(coefficient.mul(pow(x, BigInt(position))));
   }, toRational(0));
+}
+
+/**
+ * Evaluate a polynomial at a given x using Euler's method.
+ *
+ * i.e. 4x^3 + 3x^2 + 2x + 1 = x ( x ( 4x+ 3) + 2x ) + 1
+ *
+ * @param polynomial - The polynomial to evaluate.
+ * @param x - The x value to evaluate the polynomial at.
+ * @returns The result of the polynomial evaluation.
+ */
+export function evaluateHorner(
+  polynomial: Polynomial,
+  x: BigRational,
+): BigRational {
+  const degree = findDegree(polynomial);
+
+  const reverseCoefficients = Array(degree + 1)
+    .fill(toRational(0))
+    .map((_, i) => {
+      return findCoefficient(polynomial, i);
+    })
+    .reverse();
+
+  const result = reverseCoefficients
+    // don't consider the first and the last coefficients (those have special treatment)
+    .slice(1, -1)
+    .reduce(
+      (acc, coefficient) => {
+        // add the coefficient to the accumulator and then multiply by x always
+        return acc.add(coefficient).mul(x).reduce();
+      },
+      // the first coefficient is always multiplied by x
+      reverseCoefficients[0].mul(x),
+    )
+    // now add the last coefficient without a multiplication
+    .add(reverseCoefficients[degree]);
+
+  return result;
 }

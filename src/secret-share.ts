@@ -1,6 +1,6 @@
 import type { BigRational } from "big-rational-ts";
 import { interpolate } from "./interpolate";
-import { evaluate, newPolynomialFromPairs, print } from "./lib/polynomial";
+import { evaluateHorner, newPolynomialFromPairs } from "./lib/polynomial";
 import { toRational, toSimpleString } from "./lib/rational";
 import type { Point } from "./lib/point";
 
@@ -22,7 +22,7 @@ export function encode(secret: string): Point[] {
     .map((char) => toRational(char.charCodeAt(0)));
 
   const polynomial = newPolynomialFromPairs(
-    rationals.map((rational, index) => [rational, index])
+    rationals.map((rational, index) => [rational, index]),
   );
 
   const degree = rationals.length - 1;
@@ -30,13 +30,13 @@ export function encode(secret: string): Point[] {
 
   // Generate secretValueCount random rationals
   const randomRationals = Array.from({ length: secretValueCount }, () =>
-    toRational(Math.floor(Math.random() * 100))
+    toRational(Math.floor(Math.random() * 100)),
   );
 
   // Evaluate the polynomial at the random rationals
   const points = randomRationals.map((randomRational) => ({
     x: randomRational,
-    y: evaluate(polynomial, randomRational),
+    y: evaluateHorner(polynomial, randomRational),
   }));
 
   return points;
@@ -52,12 +52,12 @@ export function decode(points: Point[]) {
   const polynomial = interpolate(points);
 
   const coefficients = polynomial.coefficients.map((coefficient) =>
-    toSimpleString(coefficient.coefficient)
+    toSimpleString(coefficient.coefficient),
   );
 
   // convert coefficients back to characters
   const secret = coefficients.map((coefficient) =>
-    String.fromCharCode(parseInt(coefficient))
+    String.fromCharCode(parseInt(coefficient)),
   );
 
   return secret.join("");
